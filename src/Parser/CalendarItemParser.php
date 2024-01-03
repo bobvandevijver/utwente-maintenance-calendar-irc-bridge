@@ -35,6 +35,5 @@ class CalendarItemParser extends AbstractSharedParser
       $this->irc->updateCalendarItem($apiItem);
       $this->db->updateCalendarItem($apiItem);
     }
-    die;
   }
 }
