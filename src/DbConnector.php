@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS calendar_items (
       title TEXT,
       category TEXT,
       pub_date TEXT,
-      data TEXT
+      data TEXT,
+      reminder_sent INT DEFAULT 0 NOT NULL
 ) WITHOUT ROWID
 SQL
     );
@@ -32,14 +33,14 @@ SQL
 
   public function getCalendarItem(int $id): ?CalendarItem
   {
-    $stmt = $this->db->prepare('SELECT data FROM calendar_items WHERE id = :id');
+    $stmt = $this->db->prepare('SELECT data, reminder_sent FROM calendar_items WHERE id = :id');
     $stmt->execute([':id' => $id]);
 
     if (!$data = $stmt->fetch(PDO::FETCH_ASSOC)) {
       return NULL;
     }
 
-    return new CalendarItem(json_decode($data['data'], true));
+    return new CalendarItem(json_decode($data['data'], true), (bool)$data['reminder_sent']);
   }
 
   public function storeCalendarItem(CalendarItem $calendarItem): void
@@ -74,6 +75,18 @@ WHERE id = :id
 SQL
     );
     $stmt->execute($this->calendarItemToParameters($component));
+  }
+
+  public function markCalendarItemReminderSent(CalendarItem $component, bool $sent): void
+  {
+    $component->setReminderSent(true);
+    $stmt = $this->db->prepare(<<<SQL
+UPDATE calendar_items
+SET reminder_sent = :sent
+WHERE id = :id
+SQL
+    );
+    $stmt->execute([':sent' => $sent ? 1 : 0, ':id' => $component->getId()]);
   }
 
   private function calendarItemToParameters(CalendarItem $calendarItem): array

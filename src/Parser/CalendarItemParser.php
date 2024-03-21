@@ -3,6 +3,8 @@
 namespace App\Parser;
 
 use App\Model\CalendarItem;
+use DateInterval;
+use DateTimeImmutable;
 
 class CalendarItemParser extends AbstractSharedParser
 {
@@ -14,6 +16,8 @@ class CalendarItemParser extends AbstractSharedParser
 
   protected function parseObject(array $apiData): void
   {
+    $now = new DateTimeImmutable();
+
     $apiItem = new CalendarItem($apiData);
     $dbItem = $this->db->getCalendarItem($apiItem->getId());
 
@@ -25,7 +29,32 @@ class CalendarItemParser extends AbstractSharedParser
       $this->db->storeCalendarItem($apiItem);
     } else {
       if ($apiItem->getData() === $dbItem->getData()) {
-        // No update
+        // No update, but check if reminder is needed
+        if ($dbItem->isReminderSent()) {
+          // Reminder already sent
+          return;
+        }
+
+        if ($apiItem->getPubDate() > $now) {
+          // Reminder not yet needed
+          return;
+        }
+
+        if ($apiItem->getPubDate()->add(new DateInterval('PT1H')) <= $now) {
+          // Too late for a reminder
+          $this->console->text(sprintf('Calendar item reminder missed?! [%s] %s',
+              $apiItem->getId(), $apiItem->getTitle()));
+          $this->db->markCalendarItemReminderSent($apiItem, true);
+
+          return;
+        }
+
+        // Create reminder
+        $this->console->text(sprintf('Calendar item reminder! [%s] %s',
+            $apiItem->getId(), $apiItem->getTitle()));
+        $this->irc->remindCalendarItem($apiItem);
+        $this->db->markCalendarItemReminderSent($apiItem, true);
+
         return;
       }
 
@@ -35,5 +64,11 @@ class CalendarItemParser extends AbstractSharedParser
       $this->irc->updateCalendarItem($apiItem);
       $this->db->updateCalendarItem($apiItem);
     }
+
+    // If the item/update is for today, mark reminder as sent
+    $this->db->markCalendarItemReminderSent(
+        $apiItem,
+        $apiItem->getPubDate()->format('Ymd') === $now->format('Ymd')
+    );
   }
 }

@@ -3,12 +3,18 @@
 namespace App\Model;
 
 use DateTimeImmutable;
+use DateTimeZone;
 
 class CalendarItem extends AbstractSharedModel
 {
   // Properties to store parsed data
   private ?int $id = null;
   private ?string $link = null;
+
+  public function __construct(array $data, private bool $reminderSent = false)
+  {
+    parent::__construct($data);
+  }
 
   public function getId(): int
   {
@@ -47,7 +53,10 @@ class CalendarItem extends AbstractSharedModel
 
   public function getPubDate(): DateTimeImmutable
   {
-    return new DateTimeImmutable(static::$accessor->getValue($this->data, '[pubDate]'));
+    $dbValue = new DateTimeImmutable(static::$accessor->getValue($this->data, '[pubDate]'));
+
+    // Retard use of timezones because the onderhoudskalendar exports everything in GMT, but it is actually local time
+    return new DateTimeImmutable($dbValue->format('Y-m-d H:i:s'), new DateTimeZone('Europe/Amsterdam'));
   }
 
   public function getCategory(): string
@@ -58,5 +67,10 @@ class CalendarItem extends AbstractSharedModel
   public function getDescription(): string
   {
     return static::$accessor->getValue($this->data, '[description]');
+  }
+
+  public function isReminderSent(): bool
+  {
+    return $this->reminderSent;
   }
 }

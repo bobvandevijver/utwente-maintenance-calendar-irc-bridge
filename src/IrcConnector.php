@@ -5,6 +5,7 @@ namespace App;
 use App\Model\CalendarItem;
 use BobV\IrkerUtils\Colorize;
 use BobV\IrkerUtils\Connector;
+use DateTimeInterface;
 
 readonly class IrcConnector
 {
@@ -27,6 +28,11 @@ readonly class IrcConnector
     $this->sendCalendarItem('update', $item);
   }
 
+  public function remindCalendarItem(CalendarItem $item): void
+  {
+    $this->sendCalendarItem('reminder', $item);
+  }
+
   private function sendCalendarItem(string $type, CalendarItem $item): void
   {
     $this->send(sprintf('%s %s: %s [ %s ]',
@@ -46,7 +52,7 @@ readonly class IrcConnector
     $this->connector->send($_ENV['IRC_ENDPOINT'], $message);
   }
 
-  private function formatDate(\DateTimeInterface $dateTime): string
+  private function formatDate(DateTimeInterface $dateTime): string
   {
     if ((int)$dateTime->format('H') === 0
         && (int)$dateTime->format('i') === 0
