@@ -79,7 +79,6 @@ SQL
 
   public function markCalendarItemReminderSent(CalendarItem $component, bool $sent): void
   {
-    $component->setReminderSent(true);
     $stmt = $this->db->prepare(<<<SQL
 UPDATE calendar_items
 SET reminder_sent = :sent
