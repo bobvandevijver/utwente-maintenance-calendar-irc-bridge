@@ -4,27 +4,19 @@ namespace App\Model;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Symfony\Component\String\UnicodeString;
+use function Symfony\Component\String\u;
 
 class CalendarItem extends AbstractSharedModel
 {
-  // Properties to store parsed data
-  private ?int $id = null;
-  private ?string $link = null;
-
-  public function __construct(array $data, private bool $reminderSent = false)
+  public function __construct(array $data, private readonly bool $reminderSent = false)
   {
     parent::__construct($data);
   }
 
   public function getId(): int
   {
-    if ($this->id) {
-      return $this->id;
-    }
-
-    parse_str(parse_url($this->getLink(), PHP_URL_QUERY), $queryString);
-
-    return $this->id = $queryString['ID'];
+    return static::$accessor->getValue($this->data, '[id]');
   }
 
   public function getTitle(): string
@@ -32,41 +24,33 @@ class CalendarItem extends AbstractSharedModel
     return static::$accessor->getValue($this->data, '[title]');
   }
 
-  public function getLink(): string
+  public function getDepartment(): string
   {
-    if ($this->link) {
-      return $this->link;
-    }
-
-    $link = static::$accessor->getValue($this->data, '[link]');
-    if ('http' === parse_url($link, PHP_URL_SCHEME)) {
-      $link = preg_replace("/^http:/i", "https:", $link);
-    }
-
-    return $this->link = $link;
+    return static::$accessor->getValue($this->data, '[department]');
   }
 
-  public function getAuthor(): string
+  public function getStart(): DateTimeImmutable
   {
-    return static::$accessor->getValue($this->data, '[author]');
+    return new DateTimeImmutable(static::$accessor->getValue($this->data, '[start]'));
   }
 
-  public function getPubDate(): DateTimeImmutable
+  public function getEnd(): DateTimeImmutable
   {
-    $dbValue = new DateTimeImmutable(static::$accessor->getValue($this->data, '[pubDate]'));
-
-    // Retard use of timezones because the onderhoudskalendar exports everything in GMT, but it is actually local time
-    return new DateTimeImmutable($dbValue->format('Y-m-d H:i:s'), new DateTimeZone('Europe/Amsterdam'));
+    return new DateTimeImmutable(static::$accessor->getValue($this->data, '[end]'));
   }
 
-  public function getCategory(): string
+  public function allDay(): bool
   {
-    return static::$accessor->getValue($this->data, '[category]');
+    return static::$accessor->getValue($this->data, '[allDay]');
   }
 
-  public function getDescription(): string
+  public function getDescription(): UnicodeString
   {
-    return static::$accessor->getValue($this->data, '[description]');
+    $description = static::$accessor->getValue($this->data, '[description]');
+    $description = str_replace('<', ' <', $description);
+    $description = strip_tags($description);
+
+    return u($description)->collapseWhitespace();
   }
 
   public function isReminderSent(): bool

@@ -3,7 +3,6 @@
 namespace App\Parser;
 
 use App\Model\CalendarItem;
-use DateInterval;
 use DateTimeImmutable;
 
 class CalendarItemParser extends AbstractSharedParser
@@ -11,7 +10,7 @@ class CalendarItemParser extends AbstractSharedParser
 
   protected function getEndpoint(): string
   {
-    return $_ENV['API_RSS_ENDPOINT'];
+    return $_ENV['API_ENDPOINT'];
   }
 
   protected function parseObject(array $apiData): void
@@ -35,12 +34,12 @@ class CalendarItemParser extends AbstractSharedParser
           return;
         }
 
-        if ($apiItem->getPubDate() > $now) {
+        if ($apiItem->getStart() > $now) {
           // Reminder not yet needed
           return;
         }
 
-        if ($apiItem->getPubDate()->add(new DateInterval('PT1H')) <= $now) {
+        if ($apiItem->getEnd() <= $now) {
           // Too late for a reminder
           $this->console->text(sprintf('Calendar item reminder missed?! [%s] %s',
               $apiItem->getId(), $apiItem->getTitle()));
@@ -68,7 +67,7 @@ class CalendarItemParser extends AbstractSharedParser
     // If the item/update is for today, mark reminder as sent
     $this->db->markCalendarItemReminderSent(
         $apiItem,
-        $apiItem->getPubDate()->format('Ymd') === $now->format('Ymd')
+        $apiItem->getStart()->format('Ymd') === $now->format('Ymd')
     );
   }
 }

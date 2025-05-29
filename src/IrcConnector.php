@@ -6,6 +6,7 @@ use App\Model\CalendarItem;
 use BobV\IrkerUtils\Colorize;
 use BobV\IrkerUtils\Connector;
 use DateTimeInterface;
+use function Symfony\Component\String\u;
 
 readonly class IrcConnector
 {
@@ -35,11 +36,11 @@ readonly class IrcConnector
 
   private function sendCalendarItem(string $type, CalendarItem $item): void
   {
-    $this->send(sprintf('%s %s: %s [ %s ]',
+    $this->send(sprintf('%s %s: %s - %s',
         Colorize::colorize(sprintf('[%s]', ucfirst($type)), Colorize::COLOR_ORANGE),
-        Colorize::colorize($this->formatDate($item->getPubDate()), Colorize::COLOR_DARK_RED),
+        Colorize::colorize($this->formatDate($item), Colorize::COLOR_DARK_RED),
         $item->getTitle(),
-        Colorize::colorize($item->getLink(), Colorize::COLOR_BLUE)
+        $item->getDescription()->truncate(50, '...'),
     ));
   }
 
@@ -52,15 +53,16 @@ readonly class IrcConnector
     $this->connector->send($_ENV['IRC_ENDPOINT'], $message);
   }
 
-  private function formatDate(DateTimeInterface $dateTime): string
+  private function formatDate(CalendarItem $item): string
   {
-    if ((int)$dateTime->format('H') === 0
-        && (int)$dateTime->format('i') === 0
-        && (int)$dateTime->format('s') === 0) {
-      // All zero time, assume full day event and exclude time
-      return $dateTime->format('Y-m-d');
+    $format = $item->allDay() ? 'Y-m-d' : 'Y-m-d H:i';
+
+    $start = $item->getStart()->format($format);
+    $end = $item->getEnd()->format($format);
+    if ($start === $end) {
+      return $start;
     }
 
-    return $dateTime->format('Y-m-d H:i');
+    return "$start - $end";
   }
 }

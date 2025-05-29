@@ -4,6 +4,7 @@ namespace App\Parser;
 
 use App\DbConnector;
 use App\IrcConnector;
+use DateTimeImmutable;
 use SimpleXMLElement;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -35,7 +36,13 @@ abstract class AbstractSharedParser
    */
   public function __invoke(): int
   {
-    $response = $this->httpClient->request('GET', $_ENV['FRONTEND_HOST'] . $this->getEndpoint());
+    $now = new DateTimeImmutable();
+    $response = $this->httpClient->request('POST', $_ENV['FRONTEND_HOST'] . $this->getEndpoint(), [
+        'body' => [
+            'start' => $now->modify('-1 week')->format('c'),
+            'end' => $now->modify('+1 week')->format('c'),
+        ]
+    ]);
     if ($response->getStatusCode() !== 200) {
       $this->console->error([
           'HTTP request failed for:',
@@ -47,8 +54,9 @@ abstract class AbstractSharedParser
       return Command::FAILURE;
     }
 
-    foreach ((new SimpleXMLElement($response->getContent()))->channel->item as $apiData) {
-      $this->parseObject((array)$apiData);
+    $items = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+    foreach ($items as $item) {
+      $this->parseObject($item);
     }
 
     return Command::SUCCESS;

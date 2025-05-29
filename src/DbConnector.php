@@ -22,8 +22,9 @@ readonly class DbConnector
 CREATE TABLE IF NOT EXISTS calendar_items (
       id INTEGER PRIMARY KEY NOT NULL,
       title TEXT,
-      category TEXT,
-      pub_date TEXT,
+      department TEXT,
+      start TEXT,
+      end TEXT,
       data TEXT,
       reminder_sent INT DEFAULT 0 NOT NULL
 ) WITHOUT ROWID
@@ -48,13 +49,15 @@ SQL
     $stmt = $this->db->prepare(<<<SQL
 INSERT INTO calendar_items (id,
                         title,
-                        category,
-                        pub_date,
+                        department,
+                        start,
+                        end,
                         data)
 VALUES (:id,
         :title,
-        :category,
-        :pub_date,
+        :department,
+        :start,
+        :end,
         :data)
 SQL
     );
@@ -68,8 +71,9 @@ SQL
     $stmt = $this->db->prepare(<<<SQL
 UPDATE calendar_items
 SET title = :title,
-    category = :category,
-    pub_date = :pub_date,
+    department = :department,
+    start = :start,
+    end = :end,
     data = :data
 WHERE id = :id
 SQL
@@ -93,8 +97,9 @@ SQL
     return $this->sharedModelToParameters($calendarItem, [
         'id',
         'title',
-        'category',
-        'pub_date'
+        'department',
+        'start',
+        'end'
     ]);
   }
 
