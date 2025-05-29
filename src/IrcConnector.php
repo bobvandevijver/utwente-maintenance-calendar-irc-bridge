@@ -37,7 +37,7 @@ readonly class IrcConnector
   private function sendCalendarItem(string $type, CalendarItem $item): void
   {
     $this->send(sprintf('%s %s: %s - %s',
-        Colorize::colorize(sprintf('[%s]', ucfirst($type)), Colorize::COLOR_ORANGE),
+        Colorize::colorize(sprintf('[%s - %s]', ucfirst($type), $item->getDepartment()), Colorize::COLOR_ORANGE),
         Colorize::colorize($this->formatDate($item), Colorize::COLOR_DARK_RED),
         $item->getTitle(),
         $item->getDescription()->truncate(50, '...'),
