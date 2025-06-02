@@ -40,7 +40,7 @@ readonly class IrcConnector
         Colorize::colorize(sprintf('[%s - %s]', ucfirst($type), $item->getDepartment()), Colorize::COLOR_ORANGE),
         Colorize::colorize($this->formatDate($item), Colorize::COLOR_DARK_RED),
         $item->getTitle(),
-        $item->getDescription()->truncate(50, '...'),
+        $item->getDescription()->truncate(100, '...'),
     ));
   }
 
