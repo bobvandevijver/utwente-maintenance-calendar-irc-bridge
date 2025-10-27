@@ -65,6 +65,11 @@ class CalendarItemParser extends AbstractSharedParser
       $this->console->text(sprintf('Updated calendar item! [%s] %s',
           $apiItem->getId(), $apiItem->getTitle()));
 
+      if ($apiItem->getStart() > $now) {
+        // Item was already started, mark reminder as already send
+        $this->db->markCalendarItemReminderSent($apiItem, true);
+      }
+
       $this->irc->updateCalendarItem($apiItem);
       $this->db->updateCalendarItem($apiItem);
     }
