@@ -27,7 +27,7 @@ class CalendarItemParser extends AbstractSharedParser
       $this->irc->newCalendarItem($apiItem);
       $this->db->storeCalendarItem($apiItem);
 
-      if ($apiItem->getStart() > $now) {
+      if ($apiItem->getStart() < $now) {
         // Item was already started, mark reminder as already send
         $this->db->markCalendarItemReminderSent($apiItem, true);
       }
