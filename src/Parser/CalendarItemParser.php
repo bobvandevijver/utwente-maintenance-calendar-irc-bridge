@@ -62,6 +62,7 @@ class CalendarItemParser extends AbstractSharedParser
         return;
       }
 
+      
       $this->console->text(sprintf('Updated calendar item! [%s] %s',
           $apiItem->getId(), $apiItem->getTitle()));
 
