@@ -21,12 +21,12 @@ class CalendarItem extends AbstractSharedModel
 
   public function getTitle(): string
   {
-    return static::$accessor->getValue($this->data, '[title]');
+    return static::$accessor->getValue($this->data, '[extendedProps][title_chosen]');
   }
 
   public function getDepartment(): string
   {
-    return static::$accessor->getValue($this->data, '[department]');
+    return static::$accessor->getValue($this->data, '[extendedProps][department]');
   }
 
   public function getStart(): DateTimeImmutable
@@ -46,7 +46,7 @@ class CalendarItem extends AbstractSharedModel
 
   public function getDescription(): UnicodeString
   {
-    $description = static::$accessor->getValue($this->data, '[description]');
+    $description = static::$accessor->getValue($this->data, '[extendedProps][description]');
     $description = str_replace('<', ' <', $description);
     $description = strip_tags($description);
 
